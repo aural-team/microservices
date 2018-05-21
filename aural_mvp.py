@@ -59,7 +59,7 @@ for s in range(1,num):
 
 os.system('ffmpeg -i "concat:'+inputs+'" -acodec copy output2.mp3')
 
-os.system('ffmpeg -i output2.mp3 -i background_low_vol.mp3 -filter_complex amerge -ac 2 -c:a libmp3lame -q:a 4 merged.mp3')
+os.system('ffmpeg -i output2.mp3 -i audios/background_low_vol.mp3 -filter_complex amerge -ac 2 -c:a libmp3lame -q:a 4 merged.mp3')
 #summary = summarize(text3)
 #print(summary)
 #synthesize_text(summary)

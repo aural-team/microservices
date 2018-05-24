@@ -4,20 +4,58 @@ import json
 import os
 from pprint import pprint
 import requests
+from google.cloud import language
 from google.cloud import texttospeech
+from google.cloud.language import enums
+from google.cloud.language import types
+import six
 
 
-url = 'https://newsapi.org/v2/top-headlines?sources=techcrunch,the-verge,wired&pageSize=40&apiKey=6746db3f285a482eb943507c56d56898'
+#url = 'https://newsapi.org/v2/top-headlines?sources=techcrunch,the-verge,wired&pageSize=40&apiKey=6746db3f285a482eb943507c56d56898'
+url = 'https://newsapi.org/v2/top-headlines?country=in&apiKey=6746db3f285a482eb943507c56d56898'
+VOICES = {'en-GB-Standard-A','en-GB-Standard-B','en-GB-Standard-C','en-GB-Standard-D','en-US-Wavenet-A','en-US-Wavenet-B','en-US-Wavenet-C','en-US-Wavenet-D','en-US-Wavenet-E','en-US-Wavenet-F','en-US-Standard-B','en-US-Standard-C','en-US-Standard-D','en-US-Standard-E'}
 client = texttospeech.TextToSpeechClient()
 
-def synthesize_text(text, filename):
+def entities_text(text):
+    """Detects entities in the text."""
+    client = language.LanguageServiceClient()
 
-    input_text = texttospeech.types.SynthesisInput(text=text)
-    #print(str(client.list_voices()))
+    if isinstance(text, six.binary_type):
+        text = text.decode('utf-8')
+
+    # Instantiates a plain text document.
+    document = types.Document(
+        content=text,
+        type=enums.Document.Type.PLAIN_TEXT)
+
+    entities = client.analyze_entities(document).entities
+
+    # entity types from enums.Entity.Type
+    entity_type = ('UNKNOWN', 'PERSON', 'LOCATION', 'ORGANIZATION',
+                   'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER')
+
+    for entity in entities:
+        '''print('=' * 20)
+        print(u'{:<16}: {}'.format('name', entity.name))
+        print(u'{:<16}: {}'.format('type', entity_type[entity.type]))
+        print(u'{:<16}: {}'.format('metadata', entity.metadata))
+        print(u'{:<16}: {}'.format('salience', entity.salience))
+        print(u'{:<16}: {}'.format('wikipedia_url',
+              entity.metadata.get('wikipedia_url', '-'))) '''
+        if entity_type[entity.type] == 'ORGANIZATION' or entity_type[entity.type] == 'LOCATION' or entity_type[entity.type] == 'EVENT':
+            text = text.replace(entity.name,'<emphasis level="moderate">'+entity.name+"</emphasis>")
+            print('{}-----{}'.format(entity.name,entity_type[entity.type]))
+    return text
+
+def synthesize_text(text, filename, voice_str):
+
+    text = '<speak>'+text+'</speak>'
+    input_text = texttospeech.types.SynthesisInput(ssml=text)
     voice = texttospeech.types.VoiceSelectionParams(
         language_code='en-US',
-        name='en-US-Wavenet-F',
-        ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
+        name=voice_str,#'en-US-Wavenet-A',
+        #name='en-GB-Standard-B',        
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.MALE)
 
     audio_config = texttospeech.types.AudioConfig(
         speaking_rate=0.85,
@@ -28,7 +66,8 @@ def synthesize_text(text, filename):
     # The response's audio_content is binary.
     with open('files/'+filename, 'wb') as out:
         out.write(response.audio_content)
-        print('Audio content '+text+' written to file '+filename)
+        #print('Audio content '+text+' written to file '+filename)
+
 
 
 #text = 'To get to the Uber conference on flying cars in Los Angeles last week, where I was scheduled to interview Uber CEO Dara Khosrowshahi,'+str('I hailed a Lyft. My driver was understandably amused about where I was going.\'Flying cars?\' he said, laughing. \'That makes more sense than the self-driving ones.\'My driver was right: these days, it seems likely Uber will have flying cars before it has self-driving cars. The fatal crash involving one of the ride-hailing company’s autonomous test vehicles in Tempe, Arizona this past March was a huge blow to the company’s self-driving program. Federal investigators are still digging into what happened, but the death of Elaine Herzberg forced Uber to shut down its testing program nationwide. Khosrowshahi is already looking beyond the investigation, though.''In a “fireside chat” with Bloomberg’s Brad Stone at the end of the Elevate conference, he said autonomous testing was likely to resume “in a few months.” Regardless of what federal crash investigators finds, Khosrowshahi is already planning for the future.''This is typical of the 48-year-old, who, in some ways, is always looking to the horizon. Born in Tehran into a wealthy Muslim family, Khosrowshahi and his family were forced to flee right before the Iranian Revolution, first to Southern France, and then to Upstate New York. After a stint in investment banking, he became CEO of Expedia in 2001, where he grew the business to a massive scale and became one of the highest paid chief executives in the country, with compensation totaling $94.6 million.''Since taking the reins at Uber in August 2017, Khosrowshahi has focused on two things: apologizing for the sins of his predecessor, Travis Kalanick; and making a series of deals to grow Uber beyond app-based ride-hailing. The past few months have been a flurry of activity as Khosrowshahi puts his own stamp on the troubled company. Ride-hailing is and will remain Uber’s core business for the near term — but Khosrowshahi sees a whole world of potential outside the car.''The first part of the job, well, you’ve probably read all about Uber’s disastrous 2017. Every day seemed to bring a fresh allegation, a new self-inflicted humiliation or scandal, and the further deterioration of the company’s responsibility to operate in good faith on behalf of its drivers and customers. Khosrowshahi has made plenty of apologies. And now he’s trying to focus on making Uber a better company.''He’s made some pretty good progress. Uber bought dockless bike-share company Jump for a reported $150–200 million. Uber’s also making moves to add car-sharing vehicles, as well as public transportation like buses and trains, to its app. The company will also share more of its data on traffic patterns and curbside usage with cities in an effort to become “true partners to cities for the long term,” Khosrowshahi said. And, of course, there are the flying cars.''Though the 2017 scandals got more press, Uber lost $4.5 billion last year, a staggering figure for a global company with tens of thousands of employees and millions of drivers. The company closed the year with around $6 billion in cash, 13 percent below the prior year’s total — indicating that new investments aren’t keeping up with the company’s expenditures. And it continues to face a host of legal and regulatory challenges, both in the US and abroad.''Meanwhile, Lyft continues to grow its share of the ride-hailing business, finishing the year with 30 percent of the market’s revenue, creeping up behind Uber’s 70 percent.'
@@ -44,22 +83,25 @@ data = resp.json()
 
 pprint(data)
 
-num = 0
+#print(str(client.list_voices()[0]['name']))
+for voice in VOICES:
+    num = 0
+    for article in data['articles']:
+        text_to_tts = str(article['title'])#str(article['title'])+'. '+str(article['description'])
+        print(text_to_tts+'\n')
+        filename = str(num)+'.mp3'
+        num += 1
+        #text_to_tts = entities_text(text_to_tts)
+        synthesize_text(text_to_tts, filename, voice)
 
-for article in data['articles']:
-    text_to_tts = str(article['title'])+' '+str(article['description'])
-    print(text_to_tts+'\n')
-    filename = str(num)+'.mp3'
-    num += 1
-    synthesize_text(text_to_tts, filename)
+    inputs = 'files/0.mp3'
+    for s in range(1,num):
+        inputs += '|audios/split.mp3|files/'+str(s)+'.mp3'
 
-inputs = 'files/0.mp3'
-for s in range(1,num):
-    inputs += '|files/'+str(s)+'.mp3'
+    os.system('ffmpeg -i "concat:'+inputs+'" -acodec copy '+voice+'_temp.mp3')
 
-os.system('ffmpeg -i "concat:'+inputs+'" -acodec copy output2.mp3')
-
-os.system('ffmpeg -i output2.mp3 -i audios/background_low_vol.mp3 -filter_complex amerge -ac 2 -c:a libmp3lame -q:a 4 merged.mp3')
+    #os.system('ffmpeg -i outputfinal.mp3 -i audios/background_low_vol.mp3 -filter_complex amerge -ac 2 -c:a libmp3lame -q:a 4 merged.mp3')
+    os.system('ffmpeg -i '+voice+'_temp.mp3 -filter_complex "amovie=audios/background_low_vol.mp3:loop=999[s];[0][s]amix=duration=shortest" -ac 2 -c:a libmp3lame -q:a 4 '+voice+'_news.mp3')
 #summary = summarize(text3)
 #print(summary)
 #synthesize_text(summary)

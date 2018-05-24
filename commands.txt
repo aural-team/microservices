@@ -1,0 +1,3 @@
+Crop: ffmpeg -ss 2 -t 3 -i audios/split_32.mp3 -acodec copy split_final.mp3
+Conversion to 32kbps: ffmpeg -i split_final.mp3 -ac 1 -ab 32000 -ar 24000 temp.mp3
+Concat: ffmpeg -i "concat:files/0.mp3|temp.mp3|files/1.mp3" -c:a copy testing.mp3

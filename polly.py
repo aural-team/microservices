@@ -20,8 +20,8 @@ def synthesize_speech(client, text, filename):
 def generate_audio(article_count=10):
 	client = boto3.client(
 		'polly',
-		aws_access_key_id="AKIAJHUXDSBOZSCL2M6A",
-        aws_secret_access_key="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",
+		aws_access_key_id="AKIAJMSSNCHY3ZLX2NHA",
+        aws_secret_access_key="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",
         region_name="us-east-2"
 	)
 

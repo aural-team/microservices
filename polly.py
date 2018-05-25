@@ -3,6 +3,7 @@ from scraper import scrape_in_shorts
 from datetime import datetime
 import os
 import threading
+import json
 
 def synthesize_speech(client, text, filename):
 
@@ -18,10 +19,13 @@ def synthesize_speech(client, text, filename):
         #print('Audio content '+text+' written to file '+filename)
 
 def generate_audio(article_count=10):
+	with open(os.environ['AWS_KEYS_PATH']) as f:
+		aws_keys = json.load(f)
+
 	client = boto3.client(
 		'polly',
-		aws_access_key_id="AKIAJMSSNCHY3ZLX2NHA",
-        aws_secret_access_key="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",
+		aws_access_key_id=aws_keys['key'],
+        aws_secret_access_key=aws_keys['secret'],
         region_name="us-east-2"
 	)
 

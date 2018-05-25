@@ -20,8 +20,8 @@ def synthesize_speech(client, text, filename):
 def generate_audio(article_count=10):
 	client = boto3.client(
 		'polly',
-		aws_access_key_id="AKIAJGYOL6T2VZSROGMA",
-        aws_secret_access_key="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",
+		aws_access_key_id="AKIAJHUXDSBOZSCL2M6A",
+        aws_secret_access_key="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",
         region_name="us-east-2"
 	)
 
@@ -32,7 +32,7 @@ def generate_audio(article_count=10):
 		t = threading.Thread(target=synthesize_speech, args=(client, article, "polly{}.mp3".format(num)))
 		t.start()
 		threads.append(t)
-		# synthesize_speech(client, article, "polly{}.mp3".format(num))
+		synthesize_speech(client, article, "polly{}.mp3".format(num))
 		num += 1
 
 	for t in threads:

@@ -1,5 +1,6 @@
 import boto3
 from scraper import scrape_in_shorts
+from datetime import datetime
 import os
 
 def synthesize_speech(client, text, filename):
@@ -35,7 +36,7 @@ if __name__ == "__main__":
 	for s in range(1,num):
 		inputs += '|audios/split.mp3|files/polly'+str(s)+'.mp3'
 
-	os.system('ffmpeg -i "concat:'+inputs+'" -acodec copy polly_temp.mp3')
+	os.system('ffmpeg -i "concat:'+inputs+'" -acodec copy polly_temp_{}.mp3'.format(datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
 
 	#os.system('ffmpeg -i outputfinal.mp3 -i audios/background_low_vol.mp3 -filter_complex amerge -ac 2 -c:a libmp3lame -q:a 4 merged.mp3')
-	os.system('ffmpeg -i polly_temp.mp3 -filter_complex "amovie=audios/background_low_vol.mp3:loop=999[s];[0][s]amix=duration=shortest" -ac 2 -c:a libmp3lame -q:a 4 polly_news.mp3')
+	os.system('ffmpeg -i polly_temp.mp3 -filter_complex "amovie=audios/background_low_vol.mp3:loop=999[s];[0][s]amix=duration=shortest" -ac 2 -c:a libmp3lame -q:a 4 polly_news_{}.mp3'.format(datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))

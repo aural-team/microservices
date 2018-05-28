@@ -36,7 +36,6 @@ def generate_audio(article_count=10):
 		t = threading.Thread(target=synthesize_speech, args=(client, article, "polly{}.mp3".format(num)))
 		t.start()
 		threads.append(t)
-		synthesize_speech(client, article, "polly{}.mp3".format(num))
 		num += 1
 
 	for t in threads:
